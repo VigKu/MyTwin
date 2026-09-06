@@ -1,0 +1,23 @@
+[project]
+name = "mytwin"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "Vignesh", email = "vignesh1404@gmail.com" }
+]
+requires-python = ">=3.12"
+dependencies = [
+    "gradio>=6.26.0",
+    "openai>=3.8.0",
+    "pypdf>=6.17.0",
+    "python-dotenv>=1.2.3",
+    "requests>=2.34.2",
+]
+
+[project.scripts]
+mytwin = "mytwin:main"
+
+[build-system]
+requires = ["uv_build>=0.12.5,<0.13.0"]
+build-backend = "uv_build"
