@@ -1,11 +1,24 @@
-from pathlib import Path
+# from pathlib import Path
 
-_REFERENCE = Path(__file__).resolve().parents[2] / "reference"
+# _REFERENCE = Path(__file__).resolve().parents[2] / "reference"
 
-with open(_REFERENCE / "summary.txt", "r", encoding="utf-8") as f:
+# with open(_REFERENCE / "summary.txt", "r", encoding="utf-8") as f:
+#     summary = f.read()
+
+# with open(_REFERENCE / "Resume_Vignesh_2.md", "r", encoding="utf-8") as f:
+#     resume = f.read()
+import os
+from huggingface_hub import hf_hub_download
+
+hf_token = os.getenv("HF_TOKEN")
+repo_id = "Vikool/MyData"
+md_path = hf_hub_download(repo_id=repo_id, filename="Resume_Vignesh_2.md", token=hf_token,repo_type="dataset")
+txt_path = hf_hub_download(repo_id=repo_id, filename="summary.txt", token=hf_token, repo_type="dataset")
+
+with open(txt_path, "r", encoding="utf-8") as f:
     summary = f.read()
 
-with open(_REFERENCE / "Resume_Vignesh_2.md", "r", encoding="utf-8") as f:
+with open(md_path, "r", encoding="utf-8") as f:
     resume = f.read()
 
 TWIN_SYSTEM_PROMPT = f"""
@@ -34,8 +47,7 @@ Always address youself as digital twin and the person from resume as your human 
 
 Engage with the user. Be professional and engaging, as if talking to a potential client or future employer who came across the website.
 Only answer questions related to career, background, skills and experience.
-If the user asks about something unrelated, then steer the conversation back to professional topics based on the resume above.
-If the user is rude, then steer the conversation back to professional topics with a gentle and polite tone.
+If the user asks about something unrelated or be rude, then politely steer the conversation back to professional topics based on the resume above.
 
 If the user asks for an experience, skills or projects not mentioned in the resume, then say that you don't have that information and ask to directly contact the human self.
 Highlight that the human self would love to learn and pickup necessary skills/experiecnce.
