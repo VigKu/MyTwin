@@ -1,8 +1,8 @@
 from openai import OpenAI
-from cache import LRUSemanticPromptCache
-from context import TWIN_SYSTEM_PROMPT
-from tools import tools, handle_tool_calls
-from styles import CSS, JS, EXAMPLES
+from src.mytwin.cache import LRUSemanticPromptCache
+from src.mytwin.context import TWIN_SYSTEM_PROMPT
+from src.mytwin.tools import tools, handle_tool_calls
+from src.mytwin.styles import CSS, JS, EXAMPLES
 from dotenv import load_dotenv
 import gradio as gr
 from time import perf_counter
@@ -62,12 +62,18 @@ def chat(message, history):
     print(f"Time taken: {duration:.5f}")
     return final_content
 
-
-if __name__ == "__main__":
-    gr.ChatInterface(
+demo = gr.ChatInterface(
         chat,
         examples=EXAMPLES,
         title="My Digital Twin",
         description="Have a chat with my AI twin about my career.",
         chatbot=gr.Chatbot(show_label=False),
-    ).launch(css=CSS, js=JS, theme=gr.themes.Base())
+    )
+# if __name__ == "__main__":
+#     gr.ChatInterface(
+#         chat,
+#         examples=EXAMPLES,
+#         title="My Digital Twin",
+#         description="Have a chat with my AI twin about my career.",
+#         chatbot=gr.Chatbot(show_label=False),
+#     ).launch(css=CSS, js=JS, theme=gr.themes.Base())
