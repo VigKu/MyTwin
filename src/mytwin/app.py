@@ -14,9 +14,8 @@ MODEL_NAME = "gpt-5.4-nano" #"gpt-4o-mini"
 openai = OpenAI()
 # Initialize your Semantic Prompt Cache here
 # This needs to live globally so it doesn't reset on every chat turn
-pcache = LRUSemanticPromptCache(threshold=0.7, max_size=15)
+pcache = LRUSemanticPromptCache(threshold=0.7, lexical_threshold=80.0, max_size=15)
 system = [{"role": "system", "content": TWIN_SYSTEM_PROMPT}]
-
 
 def chat(message, history):
     # --- Optional: If you want full context tracking, uncomment the next 2 lines ---
@@ -35,7 +34,7 @@ def chat(message, history):
     print(f"-> Similarity Score: {score}")
     if cached_res:
         duration = perf_counter() - start_time
-        print(f"-> [CACHE HIT] Similarity Score: {score:.2f} | Time taken: {duration}")
+        print(f"-> [CACHE HIT] Similarity Score: {score:.2f} | Time taken: {duration:.5f}")
         return cached_res
 
     print("-> [CACHE MISS] Querying LLM...")
@@ -60,7 +59,7 @@ def chat(message, history):
     if final_content:
         pcache.add(cache_key, final_content)
     duration = perf_counter() - start_time
-    print(f"Time taken: {duration}")
+    print(f"Time taken: {duration:.5f}")
     return final_content
 
 

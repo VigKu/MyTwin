@@ -1,9 +1,10 @@
 import numpy as np
 from sentence_transformers import SentenceTransformer
+from rapidfuzz import process, fuzz
 from typing import Optional, Tuple
 
 class LRUSemanticPromptCache:
-    def __init__(self, threshold: float = 0.85, max_size: int = 15, embedding_model: str = "all-MiniLM-L6-v2"):
+    def __init__(self, threshold: float = 0.85, lexical_threshold:float = 95.0 ,max_size: int = 15, embedding_model: str = "all-MiniLM-L6-v2"):
         """
         Initialize the LRU semantic prompt cache.
         :param threshold: Minimum cosine similarity score (0.0 to 1.0) to trigger a cache hit.
@@ -11,6 +12,7 @@ class LRUSemanticPromptCache:
         :param embedding_model: The local huggingface model used to vectorize prompts.
         """
         self.threshold = threshold
+        self.lexical_threshold = lexical_threshold
         self.max_size = max_size
         self.model = SentenceTransformer(embedding_model)
         
@@ -33,11 +35,38 @@ class LRUSemanticPromptCache:
         if not self.cache_prompts:
             return None, None
 
+
+        #Tier 1 Find the highest lexical match
+        lex_score = 0
+        # Find the single closest match using word-order insensitive scoring
+        lex_match = process.extractOne(
+            prompt, 
+            self.cache_prompts, 
+            # scorer=fuzz.token_sort_ratio
+        )
+        if lex_match:
+            _, lex_score, lex_index = lex_match
+            # If the structural similarity is incredibly high, hit the cache
+            print(f"Lexcial Similarity: {lex_score:.2f}%)")
+            if lex_score >= self.lexical_threshold:
+                print(f"⚡ Lexical Cache Hit! (Lexcial Similarity: {lex_score:.2f}%)")
+                # Extract the hit elements
+                hit_prompt = self.cache_prompts.pop(lex_index)
+                hit_embedding = self.cache_embeddings.pop(lex_index)
+                hit_response = self.cache_responses.pop(lex_index)
+                
+                # Append them to the end to mark them as "Most Recently Used"
+                self.cache_prompts.append(hit_prompt)
+                self.cache_embeddings.append(hit_embedding)
+                self.cache_responses.append(hit_response)
+
+                return hit_response, lex_score
+
+        #Tier 2 Find the highest semantic match
         query_embedding = self.model.encode(prompt)
         best_score = -1.0
         best_index = -1
 
-        # Find the highest semantic match
         for idx, cached_emb in enumerate(self.cache_embeddings):
             score = self._cosine_similarity(query_embedding, cached_emb)
             if score > best_score:
