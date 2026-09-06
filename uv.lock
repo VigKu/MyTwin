@@ -811,6 +811,7 @@ version = "0.1.0"
 source = { editable = "." }
 dependencies = [
     { name = "gradio" },
+    { name = "numpy" },
     { name = "openai" },
     { name = "pypdf" },
     { name = "python-dotenv" },
@@ -821,6 +822,7 @@ dependencies = [
 [package.metadata]
 requires-dist = [
     { name = "gradio", specifier = ">=6.26.0" },
+    { name = "numpy", specifier = ">=2.5.2" },
     { name = "openai", specifier = ">=3.8.0" },
     { name = "pypdf", specifier = ">=6.17.0" },
     { name = "python-dotenv", specifier = ">=1.2.3" },
