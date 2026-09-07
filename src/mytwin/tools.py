@@ -1,41 +1,37 @@
 import json
 import os
 import requests
+import threading
 from dotenv import load_dotenv
 
 load_dotenv(override=True)
 
-# pushover_user = os.getenv("PUSHOVER_USER")
-# pushover_token = os.getenv("PUSHOVER_TOKEN")
-# pushover_url = "https://api.pushover.net/1/messages.json"
+pushover_user = os.getenv("PUSHOVER_USER")
+pushover_token = os.getenv("PUSHOVER_TOKEN")
+pushover_url = "https://api.pushover.net/1/messages.json"
 
-telegram_bot_token = os.getenv("TELEGRAM_BOT_TOKEN")
-telegram_url = f"https://api.telegram.org/bot{telegram_bot_token}/sendMessage"
-telegram_chat_id = os.getenv("TELEGRAM_CHAT_ID")
+# telegram_bot_token = os.getenv("TELEGRAM_BOT_TOKEN")
+# telegram_url = f"https://api.telegram.org/bot{telegram_bot_token}/sendMessage"
+# telegram_chat_id = os.getenv("TELEGRAM_CHAT_ID")
 
 
-def send_telegram_message(text):
-    response = requests.post(
-        telegram_url,
+def push(text):
+    requests.post(
+        pushover_url,
         data={
-            "chat_id": telegram_chat_id,
-            "text": text,
-            "disable_notification": False
+            "token": pushover_token,
+            "user": pushover_user,
+            "message": text,
         },
     )
-    if response.status_code == 200:
-        print("Message sent successfully!")
-    else:
-        print(f"Failed to send message. Error: {response.text}")
-
 
 def record_user_details(email, name="Name not provided", notes="not provided"):
-    send_telegram_message(f"Recording interest from {name} with email {email} and notes {notes}")
+    push(f"Recording interest from {name} with email {email} and notes {notes}")
     return "OK"
 
 
 def record_unknown_question(question):
-    send_telegram_message(f"Recording {question} asked that I couldn't answer")
+    push(f"Recording {question} asked that I couldn't answer")
     return "OK"
 
 
