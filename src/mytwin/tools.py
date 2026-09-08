@@ -1,7 +1,6 @@
 import json
 import os
 import requests
-import threading
 from dotenv import load_dotenv
 from huggingface_hub import HfApi, hf_hub_download
 

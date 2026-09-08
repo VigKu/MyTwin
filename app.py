@@ -47,7 +47,9 @@ def contains_pii(text: str) -> bool:
 
 def is_unknown_response(text: str) -> bool:
     """Detects variations of 'I don't know' or requests to contact directly."""
-    lowercase_text = text.lower()
+        
+    # Standardize all curly/smart apostrophes to straight ones
+    lowercase_text = text.lower().replace("’", "'").replace("`", "'")
     indicators = [
         "i don't know", "dont know", "do not know", "insufficient information",
         "don't have that information", "not mentioned",
@@ -89,6 +91,7 @@ def chat(message, history):
         messages.append(assistant_message)
         messages.extend(results)
         response = openai.chat.completions.create(model=MODEL_NAME, messages=messages, tools=tools)
+
     
     # FIX: Added [0] index to choices
     final_content = response.choices[0].message.content
