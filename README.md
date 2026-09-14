@@ -31,68 +31,61 @@ This project is based on Ed Donner's agentic course on Udemy.
                                        v
                         +--------------+-------------+
 
-                        |  Lexical & Semantic Cache  |
+                        |  Token Bucket Rate Limiter | 
+                        Prevents Rapid Spam/Abuse
                         +--------------+-------------+
                                        |
-                    +------------------+------------------+
+                     +-----------------+-----------------+
 
-                    |                                     |
-                    v Cache Hit                           v Cache Miss
-        +-----------+-----------+             +-----------+-----------+
+                     |                                   |
+                     v Allowed                           v Rate Limited
+           +---------+---------+               +---------+---------+
 
-        | Return Cached Response |             | Execute RAG Tool:     |
-        +-----------------------+             | query_add_knowledge() |
-                                              +-----------+-----------+
-                                                          |
-                                                          v
-                                              +-----------+-----------+
+           |  Lexical & Semantic  |            |   Raise Gradio    |
+           |        Cache      |               |  gr.Error Alert   |
+           +---------+---------+               +-------------------+
+                     |
+         +-----------+-----------+
 
-                                              | Pull knowledge_gap.txt|
-                                              | From Hugging Face Hub |
-                                              +-----------+-----------+
-                                                          |
-                                                          v
-                                              +-----------+-----------+
+         |                       |
+         v Cache Hit             v Cache Miss
+   +-----+-----+           +-----+-----+
 
-                                              | Append Extra Context  |
-                                              | To OpenAI LLM Inputs  |
-                                              +-----------+-----------+
-                                                          |
-                                                          v
-                                              +-----------+-----------+
+   | Return    |           | Execute   |
+   | Cached    |           | RAG Tool  |
+   +-----------+           +-----+-----+
+                                 |
+                                 v
+                           +-----+-----+
 
-                                              |   Invoke OpenAI LLM   |
-                                              |    (gpt-5.4-nano)     |
-                                              +-----------+-----------+
-                                                          |
-                                                          v
-                                              +-----------+-----------+
+                           |  OpenAI   |
+                           |   LLM     |
+                           +-----+-----+
+                                 |
+                                 v
+                           +-----+-----+
 
-                                              | Apply Guardrail Checks|
-                                              +-----------+-----------+
-                                                          |
-                                    +---------------------+---------------------+
+                           | Guardrail |
+                           |  Filters  |
+                           +-----+-----+
+                                 |
+                  +--------------+--------------+
 
-                                    |                                           |
-                                    v Passes Checks                             v Triggers Guardrail
-                        +-----------+-----------+                   +-----------+-----------+
+                  |                             |
+                  v Passes                      v Triggers Guard
+            +-----+-----+                 +-----+-----+
 
-                        | Save to LRU Cache     |                   |  Skip Cache Save      |
-                        +-----------------------+                   +-----------+-----------+
-                                                                                |
-                                                                                v
-                                                                    +-----------+-----------+
+            | Save to   |                 | Skip Cache|
+            | LRU Cache |                 | & Log Gap |
+            +-----------+                 +-----------+
 
-                                                                    | Append Knowledge Gap  |
-                                                                    |   (Hugging Face)      |
-                                                                    +-----------------------+
+1. User Submits Query: The input message is captured via the Gradio interface.
+2. Rate Limiting Check: The query immediately passes through a thread-safe Token Bucket Rate Limiter. If a user exceeds their burst allocation, the request is dropped instantly and issues a `gr.Error` alert before incurring downstream LLM expenses.
+3. Cache Verification: If allowed, the system queries a global Least Recently Used (LRU) Semantic Prompt Cache using a multi-tiered similarity pipeline.
+4. RAG Context Enrichment (Cache Miss): On a cache miss, the agent executes query_additional_knowledge. This downloads knowledge_gap.txt from Hugging Face and appends its contents as enriched reference context into the prompt stream sent to the OpenAI LLM.
+5. LLM Invocation: The OpenAI model (gpt-5.4-nano) processes the combined context (Resume + Summary + Appended Knowledge Gap) to generate a highly accurate response.
+6. Guardrail Evaluation & Storage: The final response text is parsed through PII and "Unknown Answer" evaluation engines. Safe pairs are cached, while missing answers are securely written back up to Hugging Face as a new knowledge gap entry.
 
-
-   1. User Submits Query: The input message is captured via the Gradio interface.
-   2. Cache Verification: The system queries a global Least Recently Used (LRU) Semantic Prompt Cache using a multi-tiered similarity pipeline.
-   3. RAG Context Enrichment (Cache Miss): On a cache miss, the agent executes query_additional_knowledge. This downloads knowledge_gap.txt from Hugging Face and appends its contents as enriched reference context into the prompt stream sent to the OpenAI LLM.
-   4. LLM Invocation: The OpenAI model (gpt-5.4-nano) processes the combined context (Resume + Summary + Appended Knowledge Gap) to generate a highly accurate response.
-   5. Guardrail Evaluation & Storage: The final response text is parsed through PII and "Unknown Answer" evaluation engines. Safe pairs are cached, while missing answers are securely written back up to Hugging Face as a new knowledge gap entry.
 
 ------------------------------
 ## ⚡ Multi-Tiered LRU Cache Concept
@@ -111,11 +104,15 @@ The cache tracks interactions using ordered lists:
 * Cache Evictions: When new data is added and the cache is full (>= max_size), the element at index 0 (the coldest, Least Recently Used entry) is deleted to make room for the new record.
 
 ------------------------------
-## 🛡️ Guardrails & Safety Processing
-Every model response undergoes a strict evaluation filter before it is allowed to enter the long-term cache memory:
+------------------------------
+## 🛡️ Traffic Guardrails & Safety Processing
+Every single incoming transaction and generated model response undergoes a strict multi-tiered evaluation filter to protect application performance, security, and cost:
 
-* PII Redaction Guardrail (contains_pii): Regular expressions evaluate inputs for email addresses, telephone variations, or explicit self-identifying statements (e.g., "My name is..."). If triggered, caching is bypassed to protect user privacy.
-* Uncertainty Guardrail (is_unknown_response): If the model responds with any variation of uncertainty (e.g., "do not have details", "insufficient information", "I don't know"), the response is prevented from being saved to the cache. This prevents the agent from permanently remembering unhelpful or empty states.
+| Protection Layer | Technology / Logic Used | Strategy Details |
+|---|---|---|
+| **Traffic Limiter** | Token Bucket Algorithm (`threading.Lock`) | Restricts the frequency of user requests mapping to individual client IP addresses. Allows structural burst requests up to 5 messages while enforcing a steady-state recovery delay to prevent script spamming and API abuse. |
+| **PII Redaction** | Regex Filtering (`contains_pii`) | Evaluates inputs for email addresses, telephone variations, or explicit self-identifying statements (e.g., "My name is..."). If triggered, caching is bypassed to protect user privacy. |
+| **Uncertainty Filter**| Keyword Mapping (`is_unknown_response`) | If the model responds with any variation of uncertainty (e.g., "do not have details", "insufficient information", "I don't know"), the response is prevented from entering the cache. This prevents the agent from remembering unhelpful states. |
 
 ------------------------------
 ## 👥 Human-in-the-Loop Offline Knowledge Workflow

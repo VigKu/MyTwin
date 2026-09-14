@@ -14,11 +14,13 @@ from src.mytwin.cache import LRUSemanticPromptCache
 from src.mytwin.context import get_twin_system_prompt
 from src.mytwin.tools import tools, handle_tool_calls
 from src.mytwin.styles import CSS, JS, EXAMPLES
+from src.mytwin.rate_limiter import limiter
 from dotenv import load_dotenv
 import gradio as gr
 from time import perf_counter
 import re
 from src.mytwin.tools import save_knowledge_gap
+
 
 load_dotenv(override=True)
 
@@ -57,11 +59,18 @@ def is_unknown_response(text: str) -> bool:
     ]
     return any(ind in lowercase_text for ind in indicators)
 
-def chat(message, history):
+def chat(message, history, request: gr.Request):
     # --- Optional: If you want full context tracking, uncomment the next 2 lines ---
     # from your previous historical requirement:
     # conversation_signature = "\n".join([f"{m['role']}: {m['content']}" for m in history + [{"role": "user", "content": message}]])
     # cache_key = conversation_signature
+
+    # Get user IP address
+    user_ip = request.client.host if request else "unknown"
+    
+    # Check rate limit
+    if not limiter.is_allowed(user_ip):
+        raise gr.Error("Rate limit exceeded. Please wait a moment (~5s) before sending another message.")
 
     # Add time tracking
     start_time = perf_counter()
