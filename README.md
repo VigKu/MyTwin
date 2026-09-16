@@ -18,7 +18,7 @@ short_description: Career related twin
 This project deploys an AI Digital Twin designed to interact with visitors, potential recruiters, and future employers. The system is built using Gradio, OpenAI LLMs, and Hugging Face Hub for cloud context storage.
 To deliver production-grade responsiveness and safety, the application includes a multi-tiered Semantic & Lexical LRU Cache, strict PII/State Guardrails, and an automated Human-in-the-Loop context resolution workflow.
 
-This project is based on Ed Donner's agentic course on Udemy.
+This project is based on Ed Donner's agentic course on Udemy: https://github.com/ed-donner/agents.
 
 ------------------------------
 ## 🏗️ Architecture & Workflow Overview
