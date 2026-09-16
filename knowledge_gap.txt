@@ -1,0 +1,21 @@
+Prompt: open weights?
+Answer: Hi! I’m the **AI twin of Vignesh**.
+
+On your question **“open weights?”** — I **do not have details** in the resume about experimenting specifically with **open-weights LLMs or other open checkpoint models** (e.g., Llama/Mistral/Stable Diffusion). The resume mentions **Large Language Models** as a module in his MSc, but not hands-on open-weights experimentation.
+
+Would you like to **contact Vignesh directly**? If you share your **email** (and your name/company, if you want), I can help facilitate a follow-up.
+
+Prompt: any life comments?
+Answer: I’m Vignesh’s **AI digital twin** 😊—and for “life comments,” I’ll keep it professional and aligned to his background.
+
+From his journey, the most visible personal themes are:
+
+- **Deterministic-first problem solving**: he aims for the simplest, most reliable solutions—with or without AI.  
+- **Practical impact**: he repeatedly moves work from PoC → **production/testing**, including UI integration and on-time delivery.  
+- **Build + teach**: he mentors teammates (UI and QA engineers too), not just model development.  
+- **Quality mindset**: strong emphasis on acceptance testing, robustness, and interpretability for stakeholders.
+
+If you meant something else by “life comments” (career philosophy vs. personal values), tell me what angle you want.
+
+Also—if you’re referring to the earlier “open weights” topic (LLMs), I **do not have details** about hands-on open-weights experimentation in the resume. Would you like to contact Vignesh directly? If yes, share your email and (optional) your name/company.
+

@@ -15,6 +15,8 @@ short_description: Career related twin
 ------------------------------
 ## My AI Twin Deployment with Semantic LRU Caching & Guardrails
 
+link: https://vikool-myvirtualtwin.hf.space
+
 This project deploys an AI Digital Twin designed to interact with visitors, potential recruiters, and future employers. The system is built using Gradio, OpenAI LLMs, and Hugging Face Hub for cloud context storage.
 To deliver production-grade responsiveness and safety, the application includes a multi-tiered Semantic & Lexical LRU Cache, strict PII/State Guardrails, and an automated Human-in-the-Loop context resolution workflow.
 
@@ -121,7 +123,7 @@ When the digital twin encounters a career-related question that isn't answered i
 [Agent Misses Answer] -> [Appends to knowledge_gap.txt] -> [Human Edits File Offline] -> [Agent Pulls via Tool as RAG]
 
 ## 1. Automated Detection & Storage
-When the Uncertainty Guardrail catches an "I don't know" state, it automatically runs save_knowledge_gap(). This function downloads the current knowledge_gap.txt file from a Hugging Face Dataset repository (Vikool/MyData), appends the raw question along with the agent's uncertain response, and pushes the updated file back to the repository.
+When the Uncertainty Guardrail catches an "I don't know" state, it automatically runs save_knowledge_gap(). This function downloads the current knowledge_gap.txt file from a Hugging Face Dataset repository, appends the raw question along with the agent's uncertain response, and pushes the updated file back to the repository.
 ## 2. Offline Human Intervention
 The human owner logs into Hugging Face or edits the repository file offline. The human modifies the appended entry by replacing the uncertain response with the true, verified factual background:
 
